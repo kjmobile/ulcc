@@ -20,6 +20,36 @@ project/
 └── results/                        # Analysis outputs (CSV)
 ```
 
+##  Variable Generation Map
+
+### H1_market_behavior.py
+**analyze_market_behavior_h1(base_data) 생성 변수:**
+- `behavior_df`: DataFrame with ['Entry%', 'Exit%', 'Churn%', 'Net%', 'Persist%']
+  - Index: ['ULCC', 'LCC', 'Hybrid', 'Legacy'] 
+  - Entry%: 새로운 노선 진입률 (%)
+  - Exit%: 기존 노선 철수율 (%)
+  - Churn%: Entry% + Exit% (시장 역동성)
+
+**analyze_route_maturity_h1(base_data) 생성 변수:**
+- `maturity_df`: DataFrame with ['New_Routes_Exit', 'Established_Routes_Exit', 'Difference']
+
+### H2_network_structure.py  
+**analyze_network_structure_h2(base_data) 생성 변수:**
+- `network_df`: DataFrame with ['Modularity', 'Gini', 'Top3Hub%', 'Routes', 'Airports', 'Density']
+  - Modularity: 네트워크 모듈러리티 점수 (0-1)
+  - Gini: 노선 트래픽 불평등 계수
+  - Top3Hub%: 상위 3개 허브 집중도
+
+### H3_competitive_impact.py
+**analyze_competitive_impact_h3(base_data) 생성 변수:**
+- `competitive_results`: Dict with keys:
+  - 'HHI_with_ULCC': float (ULCC 있는 노선 HHI)
+  - 'HHI_without_ULCC': float (ULCC 없는 노선 HHI)
+  - 'LF_with_ULCC': float (ULCC 있는 노선 Load Factor)
+  - 'Routes_analyzed': int (분석 노선 수)
+
+### Data Flow Map:
+base_data['combined_od'] → analyze_*_h*() → results_df → create_h*_figure() → PNG/EPS files
 
 
 ### Basic Usage in Jupyter Notebook
