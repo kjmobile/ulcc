@@ -196,43 +196,51 @@ def create_route_datasets(combined_od, combined_t100):
     
     return route_presence, route_level_od, route_level_t100
 
+
 #num6: Main data preparation function
-def prepare_base_data():
-    """Main function to prepare all base data"""
-    
-    print("ULCC STRATEGIC VOLATILITY ANALYSIS - DATA PREPARATION")
-    print("=" * 60)
-    
-    # Load all data
-    od_years, t100_years, shock_data, classification_map = load_all_data()
-    
-    if not od_years or not classification_map:
-        print("Error: Cannot proceed without data")
-        return None
-    
-    # Prepare combined datasets
-    combined_od, combined_t100 = prepare_combined_data(od_years, t100_years, classification_map)
-    
-    # Create route-level datasets
-    route_presence, route_level_od, route_level_t100 = create_route_datasets(combined_od, combined_t100)
-    
-    base_data = {
-        'od_years': od_years,
-        't100_years': t100_years,
-        'shock_data': shock_data,
-        'classification_map': classification_map,
-        'combined_od': combined_od,
-        'combined_t100': combined_t100,
-        'route_presence': route_presence,
-        'route_level_od': route_level_od,
-        'route_level_t100': route_level_t100
-    }
-    
-    print("=" * 60)
-    print("BASE DATA PREPARATION COMPLETE!")
-    print("=" * 60)
-    
-    return base_data
+def prepare_base_data(include_route_presence=True): # True only for H1
+   """Main function to prepare all base data"""
+   
+   print("ULCC STRATEGIC VOLATILITY ANALYSIS - DATA PREPARATION")
+   print("=" * 60)
+   
+   # Load all data
+   od_years, t100_years, shock_data, classification_map = load_all_data()
+   
+   if not od_years or not classification_map:
+       print("Error: Cannot proceed without data")
+       return None
+   
+   # Prepare combined datasets
+   combined_od, combined_t100 = prepare_combined_data(od_years, t100_years, classification_map)
+   
+   # Create route-level datasets (only if needed)
+   if include_route_presence:
+       print("Creating route presence data for H1 analysis...")
+       route_presence, route_level_od, route_level_t100 = create_route_datasets(combined_od, combined_t100)
+   else:
+       print("Skipping route presence data (not needed for H2/H3/H4)")
+       route_presence = None
+       route_level_od = None
+       route_level_t100 = None
+   
+   base_data = {
+       'od_years': od_years,
+       't100_years': t100_years,
+       'shock_data': shock_data,
+       'classification_map': classification_map,
+       'combined_od': combined_od,
+       'combined_t100': combined_t100,
+       'route_presence': route_presence,
+       'route_level_od': route_level_od,
+       'route_level_t100': route_level_t100
+   }
+   
+   print("=" * 60)
+   print("BASE DATA PREPARATION COMPLETE!")
+   print("=" * 60)
+   
+   return base_data
 
 if __name__ == "__main__":
     base_data = prepare_base_data()
