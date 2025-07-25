@@ -315,39 +315,42 @@ custom_result = combined_od.groupby('Business_Model')['Passengers'].sum()
 
 ## Examples
 
+markdown## Examples
+
 ### Scenario 1: Quick H1 Test
 ```python
 from basecode import prepare_base_data
-from H1_market_behavior import run_h1_analysis
+from h1_analysis import run_h1_analysis
 
 base_data = prepare_base_data()
 h1_results = run_h1_analysis(base_data)
-```
-
-### Scenario 2: Competitive Analysis Focus
-```python
-from basecode import prepare_base_data
-from H1_market_behavior import run_h1_analysis
-from H3_competitive_impact import run_h3_analysis
+Scenario 2: Competitive Analysis Focus
+pythonfrom basecode import prepare_base_data
+from h1_analysis import run_h1_analysis
+from h3_analysis import run_h3_analysis
 
 base_data = prepare_base_data()
 h1_results = run_h1_analysis(base_data)
 h3_results = run_h3_analysis(base_data)
-```
-
-### Scenario 3: Complete Analysis
-```python
-from basecode import prepare_base_data
-from H1_market_behavior import run_h1_analysis
-from H2_network_structure import run_h2_analysis
-from H3_competitive_impact import run_h3_analysis
-from H4_covid_recovery import run_h4_analysis
+Scenario 3: Complete Analysis
+pythonfrom basecode import prepare_base_data
+from h1_analysis import run_h1_analysis
+from h2_analysis import run_h2_analysis
+from h3_analysis import run_h3_analysis
+from h4_analysis import run_h4_analysis
 
 base_data = prepare_base_data()
 h1_results = run_h1_analysis(base_data)
 h2_results = run_h2_analysis(base_data)
 h3_results = run_h3_analysis(base_data)
 h4_results = run_h4_analysis(base_data)
+Scenario 4: Custom Analysis
+pythonfrom basecode import prepare_base_data
+from additional_analysis import run_additional_analysis
+
+base_data = prepare_base_data()
+additional_results = run_additional_analysis(base_data)
+
 ```
 
 ## Output Files
