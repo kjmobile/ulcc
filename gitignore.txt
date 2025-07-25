@@ -1,0 +1,28 @@
+# Large folders - IGNORE COMPLETELY
+data/
+report/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Google Drive files
+*.gdoc
+*.gsheet
+*.gslides
+
+# Data files (optional - if too large)
+*.parquet
+*.csv
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Results (optional)
+*.png
+*.pdf
