@@ -320,7 +320,6 @@ h3_results = run_h3_analysis(base_data)
 h4_results = run_h4_analysis(base_data)
 ```
 
-
 ## Output Files
 
 ### Results Directory:
@@ -338,6 +337,3 @@ h4_results = run_h4_analysis(base_data)
 - `Additional_Route_Concentration.csv` - Route concentration metrics
 - `Additional_Market_Penetration.csv` - Market penetration analysis
 
----
-
-*This system enables flexible, reproducible analysis of ULCC strategic volatility with publication-ready outputs.*
