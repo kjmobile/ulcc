@@ -5,17 +5,17 @@ A modular analysis  for strategic volatility.
 
 ```
 project/
-├── 1_basecode.py                    # Data loading & manuscript styling
-├── 2_H1_market_behavior.py         # H1: Market Entry/Exit Analysis
-├── 3_H2_network_structure.py       # H2: Network Modularity Analysis
-├── 4_H3_competitive_impact.py      # H3: Competitive Effects Analysis
-├── 5_H4_covid_recovery.py          # H4: COVID Resilience Analysis
-├── 6_additional_analysis.py        # Supplementary analyses
+├── basecode.py                    # Data loading & manuscript styling
+├── h1_analysis.py                  # H1: Market Entry/Exit Analysis
+├── h2_analysis.py                  # H2: Network Modularity Analysis
+├── h3_analysis.py                  # H3: Competitive Effects Analysis
+├── h4_analysis.py                  # H4: COVID Resilience Analysis
+├── additional_analysis.py        # Supplementary analyses
 ├── airline_classification_4way.csv # Carrier type classifications
 ├── data/
-│   ├── od/                         # Origin-Destination data (parquet)
-│   ├── t_100/                      # T-100 operational data (parquet)
-│   └── analysis/                   # Processed datasets
+│   ├── od/                         # Origin-Destination data (parquet) : not here
+│   ├── t_100/                      # T-100 operational data (parquet) : not here
+│   └── analysis/                   # Processed datasets :not here
 ├── figures/                        # Generated visualizations (PNG + EPS)
 └── results/                        # Analysis outputs (CSV)
 ```
