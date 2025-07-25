@@ -1,6 +1,13 @@
 # Large folders - IGNORE COMPLETELY
 data/
 report/
+results/
+figures/
+
+# Sensitive data scraping files
+Diio_OD.py
+Diio_T100.py
+
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
