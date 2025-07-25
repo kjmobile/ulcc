@@ -7,7 +7,7 @@ figures/
 # Sensitive data scraping files
 Diio_OD.py
 Diio_T100.py
-
+code.ipynb
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
