@@ -1,56 +1,27 @@
-# Strategic Volatility
-A modular analysis  for strategic volatility.
+# ULCC Strategic Volatility Analysis
 
-##  Structure
+A modular analysis system for studying Ultra-Low-Cost Carriers (ULCCs) strategic volatility in the U.S. domestic airline market (2014-2024).
+
+## Project Structure
 
 ```
 project/
-├── basecode.py                    # Data loading & manuscript styling
-├── h1_analysis.py                  # H1: Market Entry/Exit Analysis
-├── h2_analysis.py                  # H2: Network Modularity Analysis
-├── h3_analysis.py                  # H3: Competitive Effects Analysis
-├── h4_analysis.py                  # H4: COVID Resilience Analysis
-├── additional_analysis.py        # Supplementary analyses
-├── airline_classification_4way.csv # Carrier type classifications
+├── basecode.py                      # Data loading & manuscript styling
+├── h1_analysis.py                   # H1: Market Entry/Exit Analysis
+├── h2_analysis.py                   # H2: Network Modularity Analysis
+├── h3_analysis.py                   # H3: Competitive Effects Analysis
+├── h4_analysis.py                   # H4: COVID Resilience Analysis
+├── additional_analysis.py           # Supplementary analyses
+├── airline_classification_4way.csv  # Carrier type classifications
 ├── data/
-│   ├── od/                         # Origin-Destination data (parquet) : not here
-│   ├── t_100/                      # T-100 operational data (parquet) : not here
-│   └── analysis/                   # Processed datasets :not here
-├── figures/                        # Generated visualizations (PNG + EPS)
+│   ├── od/                         # Origin-Destination data (parquet)
+│   ├── t_100/                      # T-100 operational data (parquet)
+│   └── analysis/                   # Processed datasets
+├── figures/                        # Generated visualizations (PNG)
 └── results/                        # Analysis outputs (CSV)
 ```
 
-##  Variable Generation Map
-
-### H1_market_behavior.py
-**analyze_market_behavior_h1(base_data) 생성 변수:**
-- `behavior_df`: DataFrame with ['Entry%', 'Exit%', 'Churn%', 'Net%', 'Persist%']
-  - Index: ['ULCC', 'LCC', 'Hybrid', 'Legacy'] 
-  - Entry%: 새로운 노선 진입률 (%)
-  - Exit%: 기존 노선 철수율 (%)
-  - Churn%: Entry% + Exit% (시장 역동성)
-
-**analyze_route_maturity_h1(base_data) 생성 변수:**
-- `maturity_df`: DataFrame with ['New_Routes_Exit', 'Established_Routes_Exit', 'Difference']
-
-### H2_network_structure.py  
-**analyze_network_structure_h2(base_data) 생성 변수:**
-- `network_df`: DataFrame with ['Modularity', 'Gini', 'Top3Hub%', 'Routes', 'Airports', 'Density']
-  - Modularity: 네트워크 모듈러리티 점수 (0-1)
-  - Gini: 노선 트래픽 불평등 계수
-  - Top3Hub%: 상위 3개 허브 집중도
-
-### H3_competitive_impact.py
-**analyze_competitive_impact_h3(base_data) 생성 변수:**
-- `competitive_results`: Dict with keys:
-  - 'HHI_with_ULCC': float (ULCC 있는 노선 HHI)
-  - 'HHI_without_ULCC': float (ULCC 없는 노선 HHI)
-  - 'LF_with_ULCC': float (ULCC 있는 노선 Load Factor)
-  - 'Routes_analyzed': int (분석 노선 수)
-
-### Data Flow Map:
-base_data['combined_od'] → analyze_*_h*() → results_df → create_h*_figure() → PNG/EPS files
-
+## Quick Start
 
 ### Basic Usage in Jupyter Notebook
 
@@ -60,12 +31,12 @@ from basecode import prepare_base_data
 base_data = prepare_base_data()
 
 # Cell 2: Run H1 analysis
-from H1_market_behavior import run_h1_analysis
+from h1_analysis import run_h1_analysis
 h1_results = run_h1_analysis(base_data)
 
 # Cell 3: Run specific combination
-from H1_market_behavior import run_h1_analysis
-from H3_competitive_impact import run_h3_analysis
+from h1_analysis import run_h1_analysis
+from h3_analysis import run_h3_analysis
 
 h1_results = run_h1_analysis(base_data)
 h3_results = run_h3_analysis(base_data)
@@ -104,7 +75,7 @@ base_data = {                        # Main data dictionary
 }
 ```
 
-### 2. `H1_market_behavior.py` - Market Dynamics Analysis
+### 2. `h1_analysis.py` - Market Dynamics Analysis
 
 **Main Function:**
 ```python
@@ -127,7 +98,7 @@ h1_results = {
 }
 ```
 
-### 3. `H2_network_structure.py` - Network Analysis
+### 3. `h2_analysis.py` - Network Analysis
 
 **Main Function:**
 ```python
@@ -150,7 +121,7 @@ h2_results = {
 }
 ```
 
-### 4. `H3_competitive_impact.py` - Competitive Effects
+### 4. `h3_analysis.py` - Competitive Effects
 
 **Main Function:**
 ```python
@@ -180,7 +151,7 @@ h3_results = {
 }
 ```
 
-### 5. `H4_covid_recovery.py` - Crisis Resilience
+### 5. `h4_analysis.py` - Crisis Resilience
 
 **Main Function:**
 ```python
@@ -231,17 +202,17 @@ All figures are generated in **manuscript-quality format**:
 
 - **Font**: Times/serif (academic standard)
 - **Resolution**: 300 DPI
-- **Formats**: PNG (web) + EPS (publication)
+- **Format**: PNG only
 - **Colors**: Consistent 4-color palette
 - **Style**: Clean, publication-ready with value labels
 
 ### Generated Figures:
-- `Figure_4_1_Market_Behavior.png/.eps` - Market dynamics analysis
-- `Figure_4_3_Network_Structure.png/.eps` - Network modularity analysis  
-- `Figure_4_4_COVID_Recovery.png/.eps` - COVID resilience analysis
-- `Figure_H3_Competitive_Impact.png/.eps` - Competitive effects
-- `Additional_Shock_Sensitivity.png/.eps` - External shock analysis
-- `Additional_Route_Concentration.png/.eps` - Route concentration patterns
+- `Figure_4_1_Market_Behavior.png` - Market dynamics analysis
+- `Figure_4_3_Network_Structure.png` - Network modularity analysis  
+- `Figure_4_4_COVID_Recovery.png` - COVID resilience analysis
+- `Figure_H3_Competitive_Impact.png` - Competitive effects
+- `Additional_Shock_Sensitivity.png` - External shock analysis
+- `Additional_Route_Concentration.png` - Route concentration patterns
 
 ## Data Requirements
 
@@ -313,9 +284,7 @@ classification_map = base_data['classification_map']
 custom_result = combined_od.groupby('Business_Model')['Passengers'].sum()
 ```
 
-## Examples
-
-markdown## Examples
+## Usage Examples
 
 ### Scenario 1: Quick H1 Test
 ```python
@@ -324,16 +293,22 @@ from h1_analysis import run_h1_analysis
 
 base_data = prepare_base_data()
 h1_results = run_h1_analysis(base_data)
-Scenario 2: Competitive Analysis Focus
-pythonfrom basecode import prepare_base_data
+```
+
+### Scenario 2: Competitive Analysis Focus
+```python
+from basecode import prepare_base_data
 from h1_analysis import run_h1_analysis
 from h3_analysis import run_h3_analysis
 
 base_data = prepare_base_data()
 h1_results = run_h1_analysis(base_data)
 h3_results = run_h3_analysis(base_data)
-Scenario 3: Complete Analysis
-pythonfrom basecode import prepare_base_data
+```
+
+### Scenario 3: Complete Analysis
+```python
+from basecode import prepare_base_data
 from h1_analysis import run_h1_analysis
 from h2_analysis import run_h2_analysis
 from h3_analysis import run_h3_analysis
@@ -344,14 +319,15 @@ h1_results = run_h1_analysis(base_data)
 h2_results = run_h2_analysis(base_data)
 h3_results = run_h3_analysis(base_data)
 h4_results = run_h4_analysis(base_data)
-Scenario 4: Custom Analysis
-pythonfrom basecode import prepare_base_data
-from additional_analysis import run_additional_analysis
-
-base_data = prepare_base_data()
-additional_results = run_additional_analysis(base_data)
-
 ```
+
+## Technical Requirements
+
+- Python 3.8+
+- pandas, numpy, matplotlib, seaborn
+- networkx (for network analysis)
+- scipy (for statistical tests)
+- pyarrow (for parquet files)
 
 ## Output Files
 
