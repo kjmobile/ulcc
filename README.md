@@ -433,7 +433,7 @@ def create_route_id(df):
     # or df['Orig'] + '-' + df['Dest']  # T-100 data
 ```
 
-## 🔧 **Required basecode.py Fixes**
+##  **Required basecode.py Fixes**
 
 ### **Critical Fix #1: Carrier Mapping**
 ```python
@@ -463,7 +463,7 @@ combined_t100['Route'] = combined_t100['Orig'] + '-' + combined_t100['Dest']
 # Don't use: Route_Carrier = Org + '_' + Dst + '_' + Carrier
 ```
 
-## 📈 **Verified Data Scale**
+##  **Verified Data Scale**
 
 ### **2024 Data Snapshot:**
 ```python
@@ -504,9 +504,9 @@ FULL_DATASET_SCALE = {
 - File paths and directory structure
 
 ### **Issues Fixed:**
-- 🔧 **OD Carrier Mapping**: Changed from `Mkt` to `Opr`
-- 🔧 **Route Definition**: Pure airport-pairs only
-- 🔧 **Column Name Consistency**: Verified actual column names
+-  **OD Carrier Mapping**: Changed from `Mkt` to `Opr`
+-  **Route Definition**: Pure airport-pairs only
+-  **Column Name Consistency**: Verified actual column names
 
 ## **Next Steps for H1 Analysis**
 
