@@ -32,4 +32,6 @@ Thumbs.db
 
 # Results (optional)
 *.png
-*.pdf
+*.pdf.virtual_documents/ 
+*.ipynb 
+.ipynb_checkpoints/ 

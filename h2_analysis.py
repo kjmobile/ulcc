@@ -275,13 +275,13 @@ def create_h2_figure(network_df, evolution_df):
         ax6.set_ylabel('Modularity Score')
         ax6.legend(frameon=False)
     
-    plt.suptitle('Figure 4.3: Network Structure Analysis', fontsize=16, fontweight='bold', y=0.95)
+    #plt.suptitle('Figure 4.3: Network Structure Analysis', fontsize=16, fontweight='bold', y=0.95)
     plt.tight_layout()
     plt.subplots_adjust(top=0.90)
     
     # Save in both formats
     plt.savefig('figures/Figure_4_3_Network_Structure.png', dpi=300, bbox_inches='tight', facecolor='white')
-    plt.savefig('figures/Figure_4_3_Network_Structure.eps', format='eps', bbox_inches='tight', facecolor='white')
+    #plt.savefig('figures/Figure_4_3_Network_Structure.eps', format='eps', bbox_inches='tight', facecolor='white')
     plt.show()
     
     return fig

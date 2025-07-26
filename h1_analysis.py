@@ -1,277 +1,270 @@
-#num1: Import required modules
+# #002 - H1 Analysis Fixed Version
+# Memory-efficient market behavior analysis
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import os
-from collections import defaultdict
+from pathlib import Path
 
-#num2: Optimized market behavior analysis (H1)
-def analyze_market_behavior_h1_optimized(base_data):
-    """Optimized market entry/exit patterns analysis - 100x faster"""
-    
-    print("\n=== H1: OPTIMIZED MARKET BEHAVIOR ANALYSIS ===")
+def analyze_market_behavior_h1(base_data):
+    """Memory-efficient market entry/exit rate calculation"""
     
     combined_od = base_data['combined_od']
-    classification_map = base_data['classification_map']
-    valid_types = ['Legacy', 'ULCC', 'LCC', 'Hybrid']
+    valid_types = ['ULCC', 'LCC', 'Hybrid', 'Legacy']
     
     # Filter and prepare data efficiently
-    print("Filtering data...")
-    mask = combined_od['Business_Model'].isin(valid_types)
-    analysis_data = combined_od[mask].copy()
+    analysis_data = combined_od[combined_od['Business_Model'].isin(valid_types)].copy()
+    analysis_data['Route'] = analysis_data['Org'] + '-' + analysis_data['Dst']
+    analysis_data['Quarter'] = (analysis_data['Year'].astype(str) + 'Q' + 
+                               ((analysis_data['Month'] - 1) // 3 + 1).astype(str))
     
-    print(f"Analysis data: {len(analysis_data):,} rows")
+    # Aggregate to route-carrier-quarter level with traffic threshold
+    route_activity = (analysis_data.groupby(['Business_Model', 'Route', 'Opr', 'Quarter'])
+                     ['Passengers'].sum().reset_index())
+    route_activity = route_activity[route_activity['Passengers'] >= 100]
     
-    # Create route-carrier key efficiently
-    analysis_data['Route_Carrier'] = analysis_data['Org'] + '_' + analysis_data['Dst'] + '_' + analysis_data['Mkt']
-    
-    # Vectorized approach: Get unique route-carrier-year combinations
-    print("Creating route presence matrix...")
-    route_years = analysis_data.groupby(['Route_Carrier', 'Business_Model', 'Year']).size().reset_index(name='count')
-    
-    # Pivot to get presence matrix efficiently
-    presence_matrix = route_years.pivot_table(
-        index=['Route_Carrier', 'Business_Model'], 
-        columns='Year', 
-        values='count', 
-        fill_value=0
-    )
-    presence_matrix = (presence_matrix > 0).astype(int)
-    
-    print(f"Presence matrix shape: {presence_matrix.shape}")
-    
-    # Vectorized entry/exit calculation
+    # Calculate entry/exit rates by business model
     behavior_results = {}
-    years = sorted([col for col in presence_matrix.columns if isinstance(col, (int, float))])
     
-    for model in valid_types:
-        print(f"Processing {model}...")
+    for business_model in valid_types:
+        bm_data = route_activity[route_activity['Business_Model'] == business_model]
         
-        # Filter model data
-        model_mask = presence_matrix.index.get_level_values('Business_Model') == model
-        model_matrix = presence_matrix[model_mask].droplevel('Business_Model')
-        
-        if len(model_matrix) == 0:
+        if len(bm_data) == 0:
+            behavior_results[business_model] = {
+                'Entry%': 0.0, 'Exit%': 0.0, 'Churn%': 0.0, 'Net%': 0.0, 'Persist%': 100.0
+            }
             continue
         
-        # Vectorized calculation for all year transitions
-        entries_list = []
-        exits_list = []
+        # Create quarterly route sets (route-carrier combinations)
+        quarterly_routes = bm_data.groupby('Quarter').apply(
+            lambda x: set(zip(x['Route'], x['Opr']))
+        ).to_dict()
         
-        for i in range(1, len(years)):
-            prev_year = years[i-1]
-            curr_year = years[i]
+        quarters = sorted(quarterly_routes.keys())
+        entry_rates = []
+        exit_rates = []
+        
+        # Calculate quarter-to-quarter transitions
+        for i in range(1, len(quarters)):
+            prev_quarter = quarters[i-1]
+            curr_quarter = quarters[i]
             
-            if prev_year in model_matrix.columns and curr_year in model_matrix.columns:
-                prev_presence = model_matrix[prev_year]
-                curr_presence = model_matrix[curr_year]
-                
-                # Vectorized operations
-                total_prev_routes = prev_presence.sum()
-                
-                if total_prev_routes > 0:
-                    # Entry: was 0, now 1
-                    entries = ((prev_presence == 0) & (curr_presence == 1)).sum()
-                    # Exit: was 1, now 0  
-                    exits = ((prev_presence == 1) & (curr_presence == 0)).sum()
-                    
-                    entry_rate = (entries / total_prev_routes) * 100
-                    exit_rate = (exits / total_prev_routes) * 100
-                    
-                    entries_list.append(entry_rate)
-                    exits_list.append(exit_rate)
+            prev_routes = quarterly_routes[prev_quarter]
+            curr_routes = quarterly_routes[curr_quarter]
+            
+            if len(prev_routes) == 0:
+                continue
+            
+            # Entry: routes that exist in current but not previous quarter
+            entries = len(curr_routes - prev_routes)
+            # Exit: routes that existed in previous but not current quarter
+            exits = len(prev_routes - curr_routes)
+            
+            entry_rate = (entries / len(prev_routes)) * 100
+            exit_rate = (exits / len(prev_routes)) * 100
+            
+            entry_rates.append(entry_rate)
+            exit_rates.append(exit_rate)
         
-        # Calculate averages
-        avg_entry = np.mean(entries_list) if entries_list else 0
-        avg_exit = np.mean(exits_list) if exits_list else 0
+        # Calculate average rates
+        avg_entry = np.mean(entry_rates) if entry_rates else 0
+        avg_exit = np.mean(exit_rates) if exit_rates else 0
         
-        behavior_results[model] = {
-            'Entry%': avg_entry,
-            'Exit%': avg_exit,
-            'Churn%': avg_entry + avg_exit,
-            'Net%': avg_entry - avg_exit,
-            'Persist%': 100 - avg_exit
+        behavior_results[business_model] = {
+            'Entry%': round(avg_entry, 1),
+            'Exit%': round(avg_exit, 1),
+            'Churn%': round(avg_entry + avg_exit, 1),
+            'Net%': round(avg_entry - avg_exit, 1),
+            'Persist%': round(100 - avg_exit, 1)
         }
-        
-        print(f"  {model} - Entry: {avg_entry:.1f}%, Exit: {avg_exit:.1f}%")
     
-    behavior_df = pd.DataFrame(behavior_results).T
-    print("\nOptimized Market Behavior Results:")
-    print(behavior_df.round(1))
+    # Create results DataFrame
+    behavior_df = pd.DataFrame.from_dict(behavior_results, orient='index')
+    behavior_df = behavior_df.reindex(['ULCC', 'LCC', 'Hybrid', 'Legacy'])
+    
+    print("TABLE 4.1: MARKET BEHAVIOR PATTERNS BY BUSINESS MODEL")
+    print(behavior_df.to_string())
     
     return behavior_df
 
-#num3: Super fast route maturity analysis
-def analyze_route_maturity_h1_optimized(base_data):
-    """Optimized route maturity analysis using vectorized operations"""
-    
-    print("\n=== H1 OPTIMIZED: ROUTE MATURITY ANALYSIS ===")
+def analyze_route_maturity_h1(base_data):
+    """Route maturity analysis - new vs established routes"""
     
     combined_od = base_data['combined_od']
-    valid_types = ['Legacy', 'ULCC', 'LCC', 'Hybrid']
+    valid_types = ['ULCC', 'LCC', 'Hybrid', 'Legacy']
     
-    # Filter data efficiently
+    # Filter and prepare data
     analysis_data = combined_od[combined_od['Business_Model'].isin(valid_types)].copy()
+    analysis_data['Route'] = analysis_data['Org'] + '-' + analysis_data['Dst']
+    analysis_data['Quarter'] = (analysis_data['Year'].astype(str) + 'Q' + 
+                               ((analysis_data['Month'] - 1) // 3 + 1).astype(str))
     
-    # Create route identifier
-    analysis_data['Route_ID'] = analysis_data['Org'] + '_' + analysis_data['Dst'] + '_' + analysis_data['Mkt']
+    # Find first operation year for each route-carrier combination
+    route_first_year = (analysis_data.groupby(['Route', 'Opr'])['Year'].min()
+                       .reset_index().rename(columns={'Year': 'First_Year'}))
     
-    # Vectorized route age calculation
-    print("Calculating route ages...")
-    route_first_year = analysis_data.groupby('Route_ID')['Year'].min()
-    analysis_data = analysis_data.merge(
-        route_first_year.rename('First_Year'), 
-        left_on='Route_ID', 
-        right_index=True
-    )
-    
-    # Calculate route age vectorized
+    # Merge and calculate route age
+    analysis_data = analysis_data.merge(route_first_year, on=['Route', 'Opr'])
     analysis_data['Route_Age'] = analysis_data['Year'] - analysis_data['First_Year']
     analysis_data['Route_Maturity'] = np.where(analysis_data['Route_Age'] < 2, 'New', 'Established')
     
-    # Simplified maturity analysis (placeholder - can be enhanced)
+    # Aggregate by maturity
+    route_activity = (analysis_data.groupby(['Business_Model', 'Route_Maturity', 'Route', 'Opr', 'Quarter'])
+                     ['Passengers'].sum().reset_index())
+    route_activity = route_activity[route_activity['Passengers'] >= 100]
+    
+    # Calculate exit rates by maturity
     maturity_results = {}
     
-    for model in valid_types:
-        model_data = analysis_data[analysis_data['Business_Model'] == model]
+    for business_model in valid_types:
+        bm_data = route_activity[route_activity['Business_Model'] == business_model]
         
-        new_routes_count = len(model_data[model_data['Route_Maturity'] == 'New'])
-        established_routes_count = len(model_data[model_data['Route_Maturity'] == 'Established'])
+        new_exit_rates = []
+        established_exit_rates = []
         
-        # Simplified exit rate calculation (can be made more sophisticated)
-        new_exit_rate = min(30.0, new_routes_count * 0.0001)  # Placeholder
-        established_exit_rate = min(10.0, established_routes_count * 0.00005)  # Placeholder
+        for maturity in ['New', 'Established']:
+            maturity_data = bm_data[bm_data['Route_Maturity'] == maturity]
+            
+            if len(maturity_data) == 0:
+                continue
+            
+            # Create quarterly route sets
+            quarterly_routes = maturity_data.groupby('Quarter').apply(
+                lambda x: set(zip(x['Route'], x['Opr']))
+            ).to_dict()
+            
+            quarters = sorted(quarterly_routes.keys())
+            exit_rates = []
+            
+            for i in range(1, len(quarters)):
+                prev_routes = quarterly_routes[quarters[i-1]]
+                curr_routes = quarterly_routes[quarters[i]]
+                
+                if len(prev_routes) == 0:
+                    continue
+                
+                exits = len(prev_routes - curr_routes)
+                exit_rate = (exits / len(prev_routes)) * 100
+                exit_rates.append(exit_rate)
+            
+            avg_exit = np.mean(exit_rates) if exit_rates else 0
+            
+            if maturity == 'New':
+                new_exit_rates.append(avg_exit)
+            else:
+                established_exit_rates.append(avg_exit)
         
-        maturity_results[model] = {
-            'New_Routes_Exit': new_exit_rate,
-            'Established_Routes_Exit': established_exit_rate,
-            'Difference': new_exit_rate - established_exit_rate,
-            'New_Routes_Count': new_routes_count,
-            'Established_Routes_Count': established_routes_count
+        avg_new_exit = np.mean(new_exit_rates) if new_exit_rates else 0
+        avg_established_exit = np.mean(established_exit_rates) if established_exit_rates else 0
+        
+        maturity_results[business_model] = {
+            'New_Routes_Exit': round(avg_new_exit, 1),
+            'Established_Routes_Exit': round(avg_established_exit, 1),
+            'Difference': round(avg_new_exit - avg_established_exit, 1)
         }
     
-    maturity_df = pd.DataFrame(maturity_results).T
-    print("\nOptimized Route Maturity Analysis:")
-    print(maturity_df.round(1))
+    maturity_df = pd.DataFrame.from_dict(maturity_results, orient='index')
+    maturity_df = maturity_df.reindex(['ULCC', 'LCC', 'Hybrid', 'Legacy'])
+    
+    print("\nTable 4.2: Exit Rates by Route Maturity")
+    print(maturity_df.to_string())
     
     return maturity_df
 
-#num4: Create H1 visualization (unchanged but optimized data input)
-def create_h1_figure_optimized(behavior_df):
-    """Create Figure 4.1: Market Behavior Analysis - Same as before"""
+def create_h1_figure(behavior_df):
+    """Create Figure 4.1: Market Behavior Analysis"""
     
-    os.makedirs('figures', exist_ok=True)
+    colors = {
+        'ULCC': '#d62728',
+        'LCC': '#ff7f0e', 
+        'Hybrid': '#1f77b4',
+        'Legacy': '#2ca02c'
+    }
     
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
     
-    # Import colors from basecode
-    from basecode import CARRIER_COLORS as colors
+    # Panel A: Market Dynamism Index
+    bar_colors = [colors[bm] for bm in behavior_df.index]
+    x_pos = np.arange(len(behavior_df))
     
-    # Panel A: Route Churn (Market Dynamism Index)
-    churn_data = behavior_df['Churn%'].sort_values(ascending=False)
-    for i, (carrier, value) in enumerate(churn_data.items()):
-        axes[0].bar(i, value, color=colors[carrier], alpha=0.8, width=0.6, 
-                   edgecolor='black', linewidth=0.5)
-        axes[0].text(i, value + 0.5, f'{value:.1f}', ha='center', va='bottom', fontsize=9)
+    bars1 = ax1.bar(x_pos, behavior_df['Churn%'], color=bar_colors, alpha=0.8, 
+                    edgecolor='black', linewidth=0.5)
+    ax1.set_title('Panel A: Market Dynamism Index', fontweight='bold')
+    ax1.set_ylabel('Route Churn Rate (%)')
+    ax1.set_xticks(x_pos)
+    ax1.set_xticklabels(behavior_df.index)
     
-    axes[0].set_title('Panel A: Market Dynamism Index', fontweight='bold', pad=15)
-    axes[0].set_ylabel('Route Churn Rate (%)')
-    axes[0].set_xticks(range(len(churn_data)))
-    axes[0].set_xticklabels(churn_data.index)
-    axes[0].set_ylim(0, max(churn_data.values) * 1.1)
+    for i, v in enumerate(behavior_df['Churn%']):
+        ax1.text(i, v + 0.5, f'{v}%', ha='center', va='bottom', fontweight='bold')
     
     # Panel B: Entry vs Exit Dynamics
-    for carrier, row in behavior_df.iterrows():
-        axes[1].scatter(row['Entry%'], row['Exit%'], s=150, 
-                       color=colors[carrier], alpha=0.8, edgecolors='black', linewidth=0.5)
-        axes[1].annotate(carrier, (row['Entry%'], row['Exit%']), 
-                        xytext=(3, 3), textcoords='offset points', fontsize=9)
+    ax2.scatter(behavior_df['Entry%'], behavior_df['Exit%'], 
+               s=150, c=bar_colors, alpha=0.8, edgecolor='black', linewidth=0.5)
     
-    # Add quadrant reference lines
-    axes[1].axhline(y=behavior_df['Exit%'].mean(), color='gray', linestyle='--', alpha=0.5)
-    axes[1].axvline(x=behavior_df['Entry%'].mean(), color='gray', linestyle='--', alpha=0.5)
+    for i, (bm, row) in enumerate(behavior_df.iterrows()):
+        ax2.annotate(bm, (row['Entry%'], row['Exit%']), 
+                    xytext=(5, 5), textcoords='offset points', fontweight='bold')
     
-    axes[1].set_title('Panel B: Entry vs Exit Dynamics', fontweight='bold', pad=15)
-    axes[1].set_xlabel('Entry Rate (%)')
-    axes[1].set_ylabel('Exit Rate (%)')
+    ax2.set_title('Panel B: Entry vs Exit Dynamics', fontweight='bold')
+    ax2.set_xlabel('Entry Rate (%)')
+    ax2.set_ylabel('Exit Rate (%)')
+    ax2.grid(True, alpha=0.3)
     
-    # Panel C: Net Growth
-    net_data = behavior_df['Net%']
-    for i, (carrier, value) in enumerate(net_data.items()):
-        alpha = 0.8 if value > 0 else 0.5
-        axes[2].bar(i, value, color=colors[carrier], alpha=alpha, width=0.6, 
-                   edgecolor='black', linewidth=0.5)
-        
-        # Add value labels
-        y_pos = value + 0.2 if value > 0 else value - 0.4
-        axes[2].text(i, y_pos, f'{value:+.1f}', ha='center', 
-                    va='bottom' if value > 0 else 'top', fontsize=9)
+    # Panel C: Net Market Growth
+    net_values = behavior_df['Net%'].values
+    bars3 = ax3.bar(x_pos, net_values, color=bar_colors, alpha=0.8, 
+                    edgecolor='black', linewidth=0.5)
     
-    axes[2].set_title('Panel C: Net Market Growth', fontweight='bold', pad=15)
-    axes[2].set_ylabel('Net Growth Rate (%)')
-    axes[2].set_xticks(range(len(net_data)))
-    axes[2].set_xticklabels(net_data.index)
-    axes[2].axhline(y=0, color='black', linestyle='-', alpha=0.8, linewidth=1)
+    ax3.set_title('Panel C: Net Market Growth', fontweight='bold')
+    ax3.set_ylabel('Net Growth Rate (%)')
+    ax3.set_xticks(x_pos)
+    ax3.set_xticklabels(behavior_df.index)
+    ax3.axhline(y=0, color='black', linestyle='-', linewidth=1)
     
-    # Final layout
-    plt.suptitle('Figure 4.1: Market Behavior Analysis', fontsize=14, fontweight='bold', y=0.98)
+    for i, v in enumerate(net_values):
+        y_pos = v + 0.2 if v >= 0 else v - 0.3
+        va = 'bottom' if v >= 0 else 'top'
+        ax3.text(i, y_pos, f'{v:+.1f}%', ha='center', va=va, fontweight='bold')
+    
     plt.tight_layout()
-    plt.subplots_adjust(top=0.85)
     
-    # Save in both formats
-    plt.savefig('figures/Figure_4_1_Market_Behavior.png', dpi=300, bbox_inches='tight', facecolor='white')
-    plt.savefig('figures/Figure_4_1_Market_Behavior.eps', format='eps', bbox_inches='tight', facecolor='white')
+    # Save figure
+    Path('figures').mkdir(exist_ok=True)
+    plt.savefig('figures/Figure_4_1_Market_Behavior.png', dpi=300, bbox_inches='tight')
     plt.show()
     
     return fig
 
-#num5: Main optimized H1 analysis function
-def run_h1_analysis_optimized(base_data):
-    """Run complete optimized H1 analysis - Much faster version"""
+def run_h1_analysis(base_data):
+    """Main H1 analysis function"""
     
-    print("RUNNING OPTIMIZED H1: MARKET BEHAVIOR ANALYSIS")
-    print("=" * 60)
+    print("H1: MARKET ENTRY AND EXIT HYPOTHESIS")
+    print("="*50)
     
-    import time
-    start_time = time.time()
+    # Market behavior analysis
+    behavior_results = analyze_market_behavior_h1(base_data)
     
-    # Check if we need route presence data (we don't for this optimized version!)
-    if base_data['route_presence'] is None:
-        print("✅ Using optimized approach - no route_presence needed!")
-    
-    # Main market behavior analysis (optimized)
-    behavior_results = analyze_market_behavior_h1_optimized(base_data)
+    # Route maturity analysis
+    maturity_results = analyze_route_maturity_h1(base_data)
     
     # Create visualization
-    fig = create_h1_figure_optimized(behavior_results)
-    
-    # Optional: Route maturity analysis (optimized)
-    maturity_results = analyze_route_maturity_h1_optimized(base_data)
+    figure = create_h1_figure(behavior_results)
     
     # Save results
-    os.makedirs('results', exist_ok=True)
-    behavior_results.to_csv('results/H1_Market_Behavior_Results_Optimized.csv')
-    maturity_results.to_csv('results/H1_Route_Maturity_Results_Optimized.csv')
+    Path('results').mkdir(exist_ok=True)
+    behavior_results.to_csv('results/H1_Market_Behavior_Results.csv')
+    maturity_results.to_csv('results/H1_Route_Maturity_Results.csv')
     
-    elapsed_time = time.time() - start_time
-    print(f"\n⚡ H1 Optimized Analysis Complete in {elapsed_time:.1f} seconds!")
-    print("Results saved in 'results/' directory")
-    print("Figures saved in 'figures/' directory")
+    print(f"\nH1 Analysis Complete!")
+    print("Results saved to results/ and figures/")
     
     return {
         'behavior_results': behavior_results,
         'maturity_results': maturity_results,
-        'figure': fig,
-        'execution_time': elapsed_time
+        'figure': figure
     }
 
-# Replace the original run_h1_analysis function
-def run_h1_analysis(base_data):
-    """Main H1 function - now uses optimized version"""
-    return run_h1_analysis_optimized(base_data)
-
-if __name__ == "__main__":
-    from basecode import prepare_base_data
-    base_data = prepare_base_data(include_route_presence=False)  # No route_presence needed!
-    if base_data:
-        h1_results = run_h1_analysis(base_data)
+# Usage example:
+# from basecode import prepare_base_data
+# base_data = prepare_base_data()
+# h1_results = run_h1_analysis(base_data)
