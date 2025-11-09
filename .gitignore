@@ -10,13 +10,12 @@
 !h2a_crisis_resilience.py
 !h2b_analysis.py
 !h2b_supplementary.py
-!h3_network_structure.py
-!h4ab_analysis.py
-!h4cd_analysis.py
-!h4cd_analysis_2.py
 
 # Discussion file
 !discussion.py
+
+# Jupyter notebook
+!code.ipynb
 
 # Git configuration
 !.gitignore
