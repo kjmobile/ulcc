@@ -1,9 +1,9 @@
 # Ignore everything
 *
 
-# Jupyter notebook
-!code.ipynb
-!code.html
+# Core files
+!combined_analysis.py
+!code_full.png
 
 # Git configuration
 !.gitignore
