@@ -1,9 +1,6 @@
 # Ignore everything
 *
 
-# Core analysis files
-!combined_analysis.py
-
 # Jupyter notebook
 !code.ipynb
 
