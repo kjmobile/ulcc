@@ -3,6 +3,7 @@
 
 # Jupyter notebook
 !code.ipynb
+!code.html
 
 # Git configuration
 !.gitignore
