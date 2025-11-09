@@ -1,0 +1,8 @@
+# Ignore everything
+*
+
+# But not combined_analysis.py
+!combined_analysis.py
+
+# And not .gitignore itself
+!.gitignore
