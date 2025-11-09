@@ -1,8 +1,22 @@
 # Ignore everything
 *
 
-# But not combined_analysis.py
+# Core analysis files
 !combined_analysis.py
+!basecode.py
 
-# And not .gitignore itself
+# Hypothesis analysis files
+!h1_analysis.py
+!h2a_crisis_resilience.py
+!h2b_analysis.py
+!h2b_supplementary.py
+!h3_network_structure.py
+!h4ab_analysis.py
+!h4cd_analysis.py
+!h4cd_analysis_2.py
+
+# Discussion file
+!discussion.py
+
+# Git configuration
 !.gitignore
