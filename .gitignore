@@ -3,16 +3,6 @@
 
 # Core analysis files
 !combined_analysis.py
-!basecode.py
-
-# Hypothesis analysis files
-!h1_analysis.py
-!h2a_crisis_resilience.py
-!h2b_analysis.py
-!h2b_supplementary.py
-
-# Discussion file
-!discussion.py
 
 # Jupyter notebook
 !code.ipynb
